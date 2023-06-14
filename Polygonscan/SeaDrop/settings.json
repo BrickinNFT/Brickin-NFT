@@ -1,0 +1,23 @@
+{
+	"viaIR": false,
+	"optimizer": {
+		"enabled": true,
+		"runs": 100
+	},
+	"metadata": {
+		"bytecodeHash": "none"
+	},
+	"outputSelection": {
+		"*": {
+			"*": [
+				"evm.bytecode",
+				"evm.deployedBytecode",
+				"devdoc",
+				"userdoc",
+				"metadata",
+				"abi"
+			]
+		}
+	},
+	"libraries": {}
+}
