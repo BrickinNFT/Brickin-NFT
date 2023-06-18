@@ -1,2 +1,0 @@
-# official-
-Sui-Kucoin Hackthon
