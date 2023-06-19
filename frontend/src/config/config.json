@@ -1,0 +1,6 @@
+{
+  "chainName": "sui:mainnet",
+  "chainRpc": "https://fullnode.mainnet.sui.io:443",
+  "packageID": "",
+  "sharedObjectID": ""
+}
