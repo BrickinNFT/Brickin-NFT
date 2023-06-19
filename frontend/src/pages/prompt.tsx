@@ -1,5 +1,8 @@
+import { history } from 'umi'
+
 import checkBox from '@/assets/checkBox.png'
 import promptBg from '@/assets/promptBg.png'
+
 export default function Prompt() {
   return (
     // <div className="flex  justify-end items-center border border-[green]">
@@ -29,7 +32,9 @@ export default function Prompt() {
             Your collection seems to be empty, let’s <span className="text-[#7F56D9]">create </span> your NFT collection
             on <span className="text-[#7F56D9]">SUI Network</span>
           </div>
-          <div className="w-[151px] h-[44px] bg-[#7F56D9] rounded-[8px] text-[#fff] text-center leading-[44px] cursor-pointer">
+          <div
+            className="w-[151px] h-[44px] bg-[#7F56D9] rounded-[8px] text-[#fff] text-center leading-[44px] cursor-pointer"
+            onClick={() => history.push('/createPool')}>
             Click to Create
           </div>
         </div>
