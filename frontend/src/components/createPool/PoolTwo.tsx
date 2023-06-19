@@ -3,7 +3,12 @@ import chain_logo from '@/assets/chain_logo.png'
 import step_2 from '@/assets/step_2.png'
 import search from '@/assets/search.png'
 
+import { poolInfo } from '@/models/createPool'
+import cn from 'classnames'
+import { proxy, snapshot, useSnapshot, subscribe } from 'valtio'
+
 export default function PoolOne() {
+  const poolInfoSnap = useSnapshot(poolInfo)
   return (
     <div className="w-full flex flex-col items-center">
       <div className="flex flex-col items-center">
@@ -16,9 +21,25 @@ export default function PoolOne() {
       </div>
       <div className="flex flex-col items-center text-[20px] text-gray mb-4">
         <div className="w-full flex justify-evenly">
-          <button className="bg-purple rounded-lg px-4 py-2 text-[#fff] cursor-pointer">Back</button>
+          <button
+            className="bg-purple rounded-lg px-4 py-2 text-[#fff] cursor-pointer"
+            onClick={() => (poolInfo.step = 1)}>
+            Back
+          </button>
           <span className="font-bold">Step 2/3 : Select Pool Type</span>
-          <button className="bg-pink rounded-lg px-4 py-2 text-[#fff] cursor-pointer">Next</button>
+          <button
+            className={cn('rounded-lg px-4 py-2 text-[#fff]', {
+              'bg-pink cursor-not-allowed': poolInfoSnap.nfts === '' || poolInfoSnap.tokens === '',
+              'bg-purple cursor-pointer': poolInfoSnap.nfts !== '' && poolInfoSnap.tokens !== '',
+            })}
+            onClick={() => {
+              if (poolInfoSnap.nfts === '' || poolInfoSnap.tokens === '') {
+                return
+              }
+              poolInfo.step = 3
+            }}>
+            Next
+          </button>
         </div>
         <img src={step_2} alt="" />
         <span className="font-bold text-[12px] mt-[-30px] w-2/3 flex justify-center">Step 2/3 : Select Pool Type</span>
@@ -32,6 +53,8 @@ export default function PoolOne() {
               type="text"
               placeholder="Enter Collection or Address"
               className=" flex-grow h-full text-xl placeholder:text-xl text-gray border-0 outline-none rounded-xl"
+              value={poolInfoSnap.nfts}
+              onChange={(e) => (poolInfo.nfts = e.target.value)}
             />
           </div>
           <span className="text-lg">Enter existing colletion or address to proceed</span>
@@ -44,6 +67,8 @@ export default function PoolOne() {
               type="text"
               placeholder="Enter Token or Address"
               className=" flex-grow h-full text-xl placeholder:text-xl text-gray border-0 outline-none rounded-xl"
+              value={poolInfoSnap.tokens}
+              onChange={(e) => (poolInfo.tokens = e.target.value)}
             />
           </div>
           <span className="text-lg">Enter existing tokens or address to proceed</span>

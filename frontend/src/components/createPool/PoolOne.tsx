@@ -1,11 +1,31 @@
 import React from 'react'
+
 import chain_logo from '@/assets/chain_logo.png'
 import token from '@/assets/token.png'
 import ntfs from '@/assets/nfts.png'
 import step_1 from '@/assets/step_1.png'
 import add from '@/assets/add.png'
 import transfer from '@/assets/transfer.png'
+
+import { poolInfo } from '@/models/createPool'
+
 export default function PoolOne() {
+  const selectType = (number: number) => {
+    switch (number) {
+      case 1:
+        poolInfo.type = 1
+        poolInfo.step = 2
+        break
+      case 2:
+        poolInfo.type = 2
+        poolInfo.step = 2
+        break
+      case 3:
+        poolInfo.type = 3
+        poolInfo.step = 2
+        break
+    }
+  }
   return (
     <div className="w-full flex flex-col items-center">
       <div className="flex flex-col items-center">
@@ -34,7 +54,9 @@ export default function PoolOne() {
             <span>NFTs</span>
           </div>
           <div className="flex justify-center mt-2 mb-6">
-            <button className="bg-purple rounded-lg px-4 py-2 text-[#fff] cursor-pointer">NFT Trade Pool</button>
+            <button className="bg-purple rounded-lg px-4 py-2 text-[#fff] cursor-pointer" onClick={() => selectType(1)}>
+              NFT Trade Pool
+            </button>
           </div>
           <div className="flex justify-center text-gray font-bold items-center text-base text-center">
             Deposit NFTs plus tokens into the pool and earn trading fees when people have a transaction in your pool
@@ -52,7 +74,9 @@ export default function PoolOne() {
             <span>NFTs</span>
           </div>
           <div className="flex justify-center mt-2 mb-6">
-            <button className="bg-purple rounded-lg px-4 py-2 text-[#fff] cursor-pointer">NFT Purchase Pool</button>
+            <button className="bg-purple rounded-lg px-4 py-2 text-[#fff] cursor-pointer" onClick={() => selectType(2)}>
+              NFT Purchase Pool
+            </button>
           </div>
           <div className="flex justify-center text-gray font-bold items-center text-base text-center">
             Purchase your NFTs in this pool, by swapping tokens in this pool
@@ -70,7 +94,9 @@ export default function PoolOne() {
             <span>NFTs</span>
           </div>
           <div className="flex justify-center mt-2 mb-6">
-            <button className="bg-purple rounded-lg px-4 py-2 text-[#fff] cursor-pointer">NFT Sell Pool</button>
+            <button className="bg-purple rounded-lg px-4 py-2 text-[#fff] cursor-pointer" onClick={() => selectType(3)}>
+              NFT Sell Pool
+            </button>
           </div>
           <div className="flex justify-center text-gray font-bold items-center text-base text-center">
             Sell your NFTs in the pool, and swap them for tokens
