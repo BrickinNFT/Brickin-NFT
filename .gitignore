@@ -1,1 +1,10 @@
 .DS_Store
+frontend/node_modules
+frontend/.env.local
+frontend/.umirc.local.ts
+frontend/config/config.local.ts
+frontendfrontend/src/.umi
+frontend/src/.umi-production
+frontend/src/.umi-test
+frontend/dist
+frontend/.swc
