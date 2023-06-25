@@ -1,9 +1,11 @@
-module test::cnya {
-    use sui::coin::{Self, TreasuryCap, mint_and_transfer};
-    use sui::transfer;
+module brickin::cnya {
+    use sui::coin::{Self, TreasuryCap, mint};
+    use sui::transfer::{Self, public_transfer};
     use sui::tx_context::{TxContext, sender};
 
     use std:: option;
+    use sui::object::ID;
+    use sui::object;
 
     //Alipay DIGICCY, named CNYA
     struct CNYA has drop {}
@@ -25,7 +27,10 @@ module test::cnya {
         transfer::public_share_object(treasury);
     }
 
-    public entry fun mint_coin(cap: &mut TreasuryCap<CNYA>, amount: u64, ctx: &mut TxContext) {
-        mint_and_transfer(cap, amount, sender(ctx), ctx);
+    public fun mint_coin(cap: &mut TreasuryCap<CNYA>, amount: u64, ctx: &mut TxContext): ID {
+        let coin =  mint(cap, amount, ctx);
+        let coin_id = object::id(&coin);
+        public_transfer(coin, sender(ctx));
+        coin_id
     }
 }

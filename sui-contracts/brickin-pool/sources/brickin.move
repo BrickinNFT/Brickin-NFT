@@ -75,12 +75,20 @@ module brickin::brickin {
         transfer::share_object(new_pool);
     }
 
-    public fun init_nftholder(ctx: &mut TxContext) {
+    public fun init_nftholder(ctx: &mut TxContext):ID {
         let nftholderOwner = NftHolderOwner {
             id: object::new(ctx),
             nftholder: table::new<ID, ID>(ctx),
         };
+        let holder_id = object::id(&nftholderOwner);
         transfer(nftholderOwner, sender(ctx));
+        holder_id
+    }
+
+    public fun initialize_account(ctx: &mut TxContext): (ID, ID, ID){
+        let holder_id = init_nftholder(ctx);
+        let (kiosk_id, token_id) = trading::create_kiosk(ctx);
+        (kiosk_id, holder_id, token_id)
     }
 
     public fun update_balance<X, Y, Z>(trade_pool: &mut TradePool<X, Y, Z>,
@@ -102,7 +110,7 @@ module brickin::brickin {
                                                                           amount: u64,
                                                                           payment: Coin<SUI>,
                                                                           nftholderOwner: NftHolderOwner,
-                                                                          ctx: &mut TxContext): bool {
+                                                                          ctx: &mut TxContext) {
         assert!(coin::value(&payment) >= trade_pool.fee, ENotEnoughFeeToPay);
         assert!(
             get<TCOIN>() == get<X>() || get<TCOIN>() == get<Y>() || get<TCOIN>() == get<Y>(),
@@ -145,7 +153,6 @@ module brickin::brickin {
             coin::join(&mut coin_z, coin::take<Z>(&mut trade_pool.coin_self, amount, ctx));
             public_transfer(coin_z, sender(ctx));
         };
-        true
     }
 
     /*
@@ -234,14 +241,14 @@ module brickin::brickin {
     }
 
     // Only Owner
-    public fun withdraw_nft_from_x<X, Y, Z, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
+    public entry fun withdraw_nft_from_x<X, Y, Z, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
                                                               nft_id: ID,
                                                               kiosk: &mut Kiosk,
                                                               amount: u64,
                                                               payment: Coin<SUI>,
                                                               coin_x: Coin<X>,
                                                               nftholderOwner: NftHolderOwner,
-                                                              ctx: &mut TxContext): bool {
+                                                              ctx: &mut TxContext) {
         assert!(coin::value(&payment) >= trade_pool.fee, ENotEnoughFeeToPay);
         assert!(coin::value(&coin_x) >= amount, ENotEnoughTrsanctionCoin);
         public_transfer(coin::split(&mut payment, trade_pool.fee, ctx), trade_pool.account);
@@ -255,17 +262,16 @@ module brickin::brickin {
         let coin_x_in = coin::split<X>(&mut coin_x, amount, ctx);
         coin::put(&mut trade_pool.coin_sui, coin_x_in);
         public_transfer(coin_x, sender(ctx));
-        true
     }
 
-    public fun withdraw_nft_from_y<X, Y, Z, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
+    public entry fun withdraw_nft_from_y<X, Y, Z, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
                                                               nft_id: ID,
                                                               kiosk: &mut Kiosk,
                                                               amount: u64,
                                                               payment: Coin<SUI>,
                                                               coin_y: Coin<Y>,
                                                               nftholderOwner: NftHolderOwner,
-                                                              ctx: &mut TxContext): bool {
+                                                              ctx: &mut TxContext) {
         assert!(coin::value(&payment) >= trade_pool.fee, ENotEnoughFeeToPay);
         assert!(coin::value(&coin_y) >= amount, ENotEnoughTrsanctionCoin);
         public_transfer(coin::split(&mut payment, trade_pool.fee, ctx), trade_pool.account);
@@ -279,17 +285,16 @@ module brickin::brickin {
         let coin_y_in = coin::split<Y>(&mut coin_y, amount, ctx);
         coin::put(&mut trade_pool.coin_stable, coin_y_in);
         public_transfer(coin_y, sender(ctx));
-        true
     }
 
-    public fun withdraw_nft_from_z<X, Y, Z, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
+    public entry fun withdraw_nft_from_z<X, Y, Z, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
                                                               nft_id: ID,
                                                               kiosk: &mut Kiosk,
                                                               amount: u64,
                                                               payment: Coin<SUI>,
                                                               coin_z: Coin<Z>,
                                                               nftholderOwner: NftHolderOwner,
-                                                              ctx: &mut TxContext): bool {
+                                                              ctx: &mut TxContext) {
         assert!(coin::value(&payment) >= trade_pool.fee, ENotEnoughFeeToPay);
         assert!(coin::value(&coin_z) >= amount, ENotEnoughTrsanctionCoin);
         public_transfer(coin::split(&mut payment, trade_pool.fee, ctx), trade_pool.account);
@@ -303,7 +308,6 @@ module brickin::brickin {
         let coin_z_in = coin::split<Z>(&mut coin_z, amount, ctx);
         coin::put(&mut trade_pool.coin_self, coin_z_in);
         public_transfer(coin_z, sender(ctx));
-        true
     }
     /*
     // Only Owner
