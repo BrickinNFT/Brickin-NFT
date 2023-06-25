@@ -49,7 +49,7 @@ export default function PoolOne() {
             <img src={ntfs} alt="" className="w-10" />
           </div>
           <div className="w-full flex justify-between text-purple items-center px-2 my-2">
-            <span>Token</span>
+            <span>Coin</span>
             <img src={add} alt="" className="w-5 h-5" />
             <span>NFTs</span>
           </div>

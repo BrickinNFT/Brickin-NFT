@@ -7,7 +7,7 @@ export default function Prompt() {
   return (
     // <div className="flex  justify-end items-center border border-[green]">
     <div className="mt-[20px] w-full">
-      <div className="w-full flex justify-between ">
+      <div className="w-full flex justify-between">
         {/*左侧*/}
         <div className="flex flex-[2] justify-end">
           <div className="w-[380px] bg-[#fff] rounded-2xl flex flex-col justify-evenly">
@@ -15,14 +15,14 @@ export default function Prompt() {
               <img className="pl-[25px] w-[60px]" src={checkBox} alt="" />
               <span className="pl-[15px]">Collections</span>
             </div>
-            <span className="text-[#D0D5DD] pl-[25px] text-[24px] mt-4 cursor-not-allowed">Pool</span>
-            <div className="h-[352px] flex flex-col justify-around text-[#344054] pl-[25px] text-[24px] border-0 border-t border-b border-t-[#EAECF0]  border-b-[#EAECF0]">
+            <span className="text-[#D0D5DD] pl-[25px] text-[24px] mt-4 cursor-not-allowed my-4">Pool</span>
+            <div className="h-[300px] flex flex-col justify-around text-[#344054] pl-[25px] text-[24px] border-0 border-t border-b border-t-[#EAECF0]  border-b-[#EAECF0]">
               <div className=" cursor-pointer">Changelog</div>
               <div className=" cursor-pointer">Slack Community</div>
               <div className=" cursor-pointer">Support</div>
               <div className=" cursor-pointer">API</div>
             </div>
-            <div className="text-[#344054] pl-[25px] text-[24px] cursor-pointer">Log out</div>
+            <div className="text-[#344054] pl-[25px] text-[24px] cursor-pointer my-4">Log out</div>
           </div>
         </div>
         {/*右侧*/}

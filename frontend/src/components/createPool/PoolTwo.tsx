@@ -60,7 +60,7 @@ export default function PoolOne() {
           <span className="text-lg">Enter existing colletion or address to proceed</span>
         </div>
         <div className=" text-gray flex flex-col mb-2">
-          <span className="font-bold">Tokens</span>
+          <span className="font-bold">Coin</span>
           <div className="flex w-[450px] h-14  bg-white border-[1.34375px] border-gray-300 shadow-pol rounded-xl my-2">
             <img src={search} alt="" className="w-6 h-6 my-4 mx-5" />
             <input

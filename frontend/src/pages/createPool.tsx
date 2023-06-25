@@ -7,10 +7,11 @@ import PoolTwo from '@/components/createPool/PoolTwo'
 import PoolThree from '@/components/createPool/PoolThree'
 import { poolInfo } from '@/models/createPool'
 
-import { chainName, chainRpc, packageID, sharedObjectID } from '@/config/config.json'
+import { chainName, chainRpc, packageID, sharedObjectID, CNYA, CNYU, CNYW } from '@/config/config.json'
 
 import { useWallet, ConnectModal } from '@suiet/wallet-kit'
 import { TransactionBlock, JsonRpcProvider, Connection } from '@mysten/sui.js'
+import { history } from 'umi'
 
 const provider = new JsonRpcProvider(
   new Connection({
@@ -20,8 +21,12 @@ const provider = new JsonRpcProvider(
 export default function currentPool() {
   const [currentNav, setCurrentNav] = useState('Pool')
   const poolInfoSnap = useSnapshot(poolInfo)
+
   const wallet = useWallet()
   const { connected } = wallet
+  const [showModal, setShowModal] = useState(false)
+  const [showDisconnected, setShowDisconnected] = useState(false)
+  const [address, setAddress] = useState('')
   const [maxGasPrice, setMaxGasPrice] = useState(100_000_000) // 0.1Sui
   const [coin, setCoin] = useState(0)
   const handleExecuteMoveCall = async () => {
@@ -35,17 +40,53 @@ export default function currentPool() {
       tx.setGasBudget = 100_000_000 as any
       tx.moveCall({
         target: packageID as any,
-        arguments: [tx.object(sharedObjectID as string), _coin, tx.pure('6')],
+        arguments: [
+          tx.pure(address),
+          tx.pure(poolInfoSnap.nfts),
+          tx.pure('1TO1'),
+          tx.pure(poolInfoSnap.delta),
+          tx.pure(poolInfoSnap.fee),
+          tx.pure(poolInfoSnap.startPrice),
+        ],
+        typeArguments: [CNYA, CNYU, CNYW],
       })
       tx.transferObjects([_coin], tx.pure(wallet.address))
+      history.push('/processingScreen')
       const resData = await wallet.signAndExecuteTransactionBlock({
         transactionBlock: tx,
       })
+      history.push('/successScreen')
       console.log('executeMoveCall success', resData)
     } catch (e) {
       console.error('executeMoveCall failed', e)
     }
   }
+
+  const getCoin = async () => {
+    if (address !== '') {
+      const allCoins = await provider.getCoins({
+        owner: address,
+        coinType: '0x2::sui::SUI',
+      })
+
+      if (allCoins.data.length > 0) {
+        const total = allCoins.data.reduce((acc, item) => acc + Number(item.balance), 0)
+        setCoin(total - maxGasPrice)
+      } else {
+        setCoin(0)
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (wallet.connected) {
+      setAddress(wallet.address as string)
+    }
+  }, [wallet])
+
+  useEffect(() => {
+    getCoin()
+  }, [address])
 
   useEffect(
     () =>
@@ -55,6 +96,17 @@ export default function currentPool() {
     [poolInfo]
   )
 
+  useEffect(() => {
+    if (chainName && chainRpc && packageID) {
+      console.log('chainName: ', chainName)
+      console.log('chainRpc: ', chainRpc)
+      console.log('packageID: ', packageID)
+      console.log('sharedObjectID: ', sharedObjectID)
+    } else {
+      console.log('config file load failed')
+    }
+  }, [])
+
   return (
     <div className="flex justify-center items-center">
       <div className="flex-[3]">
@@ -63,8 +115,11 @@ export default function currentPool() {
       <div className="flex-[9]">
         {poolInfoSnap.step === 1 && <PoolOne></PoolOne>}
         {poolInfoSnap.step === 2 && <PoolTwo></PoolTwo>}
-        {poolInfoSnap.step === 3 && <PoolThree></PoolThree>}
+        {poolInfoSnap.step === 3 && <PoolThree createPool={handleExecuteMoveCall}></PoolThree>}
       </div>
+      {/* <div className="" onClick={handleExecuteMoveCall}>
+        button
+      </div> */}
     </div>
   )
 }

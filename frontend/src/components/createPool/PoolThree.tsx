@@ -10,7 +10,7 @@ import item_2 from '@/assets/item_2.png'
 
 import { poolInfo } from '@/models/createPool'
 
-export default function PoolOne() {
+export default function PoolOne(props: any) {
   const poolInfoSnap = useSnapshot(poolInfo)
   const isConfirm = () => {
     if (
@@ -47,7 +47,7 @@ export default function PoolOne() {
               'bg-pink cursor-not-allowed': !isConfirm(),
               'bg-purple cursor-pointer': isConfirm(),
             })}
-            onClick={() => history.push('/processingScreen')}>
+            onClick={props.createPool}>
             Confirm
           </button>
         </div>

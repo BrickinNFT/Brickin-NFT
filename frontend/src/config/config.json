@@ -1,6 +1,15 @@
 {
-  "chainName": "sui:mainnet",
-  "chainRpc": "https://fullnode.mainnet.sui.io:443",
-  "packageID": "",
-  "sharedObjectID": ""
+  "chainName": "sui:testnet",
+  "chainRpc": "https://sui-testnet-rpc.allthatnode.com",
+  "packageID": "0xcb89165d37f7285f02031d29da95351cc096939484a492ea6e796d7df00101c7::brickin::create_pair_nft_trade_pool",
+  "sharedObjectID": "1",
+  "SWAPPKG": "0xcb89165d37f7285f02031d29da95351cc096939484a492ea6e796d7df00101c7",
+  "CNYA": "0xcb89165d37f7285f02031d29da95351cc096939484a492ea6e796d7df00101c7::cnya::CNYA",
+  "CNYACAP": "0xd23d5987b9c93a1348cca68b99d1635685b8645f26865c68d1205c756b9b5f47",
+  "CNYU": "0xcb89165d37f7285f02031d29da95351cc096939484a492ea6e796d7df00101c7::cnyu::CNYU",
+  "CNYUCAP": "0xc0b994df490b97ba639e81b30ee322d77458fcaeaf4aa06436de7d7aca0cf5bd",
+  "CNYW": "0xcb89165d37f7285f02031d29da95351cc096939484a492ea6e796d7df00101c7::cnyw::CNYW",
+  "CNYWCAP": "0x7715bad3286d98e498a730341e830707a3839e499205bbd7cc071b0a2927006d",
+  "NFTTYPE": "0xcb89165d37f7285f02031d29da95351cc096939484a492ea6e796d7df00101c7::nft_driver::NFT",
+  "POOLID": "0x768cf12322100bfa4f95502d89cceacfe82b782e6b9dc5a0359a58cfb8a0fcf1"
 }
