@@ -1,5 +1,5 @@
-module test::nft_driver {
-    use sui::object::{Self, UID};
+module brickin::nft_driver {
+    use sui::object::{Self, UID, ID};
     use std::string::String;
     use sui::tx_context::{TxContext, sender};
     use sui::transfer::public_transfer;
@@ -10,11 +10,14 @@ module test::nft_driver {
         url: String,
     }
 
-    public entry fun mint_nft(name: String, url: String, ctx: &mut TxContext) {
-        public_transfer(NFT{
+    public fun mint_nft(name: String, url: String, ctx: &mut TxContext):ID {
+        let nft = NFT{
             id: object::new(ctx),
             name,
             url
-        }, sender(ctx));
+        };
+        let nft_id = object::id(&nft);
+        public_transfer(nft, sender(ctx));
+        nft_id
     }
 }
