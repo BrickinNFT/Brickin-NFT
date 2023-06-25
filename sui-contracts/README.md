@@ -50,6 +50,26 @@ sui client call --package $COINPKG\
                 --args $CNYUCAP 1000000000000
 ```
 
+### Mint one NFT
+
+NFT can be minted from `mint_nft` in module `nft_driver`.
+
+```rust
+    public entry fun mint_nft(
+        name: String, 
+        url: String, 
+        ctx: &mut TxContext)
+```
+
+sui client command:
+```zsh
+sui client call --package $COINPKG\
+                --module nft_driver \
+                --function mint_nft \
+                --gas-budget 100000000 \
+                --args 'NFT' "INITURL"
+```
+
 ### Generate the Swap pool
 
 Please pass the type arguments and required parameters to this function `create_pair_nft_trade_pool`
@@ -195,7 +215,7 @@ sui client command:
 ```zsh
 sui client call --package $SWAPPKG \
                   --module brickin \
-                  --function withdraw_nft_from_ \
+                  --function withdraw_nft_from_y \
                   --gas-budget 100000000 \
                   --args $POOLID \
                          0x19186d1a3568a7b26accba24f4cc8e5226ed96a8ea597c19dac49c3c866f3334 \
