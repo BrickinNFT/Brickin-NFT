@@ -42,7 +42,7 @@ module brickin::trading {
         transfer(
             OwnerToken {
                 id: token_uid,
-                kiosk: object::id(&kiosk),
+                kiosk: kiosk_id,
                 owner,
             },
             owner,
