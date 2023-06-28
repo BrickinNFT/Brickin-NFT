@@ -1,8 +1,8 @@
 module brickin::trading {
 
-    use sui::object::{Self, UID, ID};
+    use sui::object::{Self, ID};
     use sui::tx_context::{TxContext, sender};
-    use sui::transfer::{transfer, public_share_object, public_transfer};
+    use sui::transfer::{public_share_object, public_transfer};
     use sui::kiosk::{Self, Kiosk, KioskOwnerCap, uid_mut};
     use sui::dynamic_field::{Self as df};
     use sui::vec_set::{Self, VecSet};
@@ -12,12 +12,6 @@ module brickin::trading {
     const ENotOwner :u64 = 1001;
     const ENotAuthorized :u64 = 1002;
 
-
-    struct OwnerToken has key {
-        id: UID,
-        kiosk: ID,
-        owner: address,
-    }
     /// For `Kiosk::id` value `Table<ID, NftRef>`
     struct NftRefsDfKey has store, copy, drop {}
     /// Hold the `KioskOwnerCap`
@@ -31,24 +25,14 @@ module brickin::trading {
     }
 
     /// Create `Kiosk` for the sender and share it
-    public fun create_kiosk(ctx: &mut TxContext):(ID, ID){
+    public fun create_kiosk(ctx: &mut TxContext): ID{
         let owner = sender(ctx);
         let (kiosk, kiosk_cap) = kiosk::new(ctx);
         let kiosk_id = object::id(&kiosk);
         kiosk::set_owner_custom(&mut kiosk, &kiosk_cap, owner);
         insert_extension(&mut kiosk, kiosk_cap, ctx);
-        let token_uid = object::new(ctx);
-        let token_id = object::uid_to_inner(&token_uid);
-        transfer(
-            OwnerToken {
-                id: token_uid,
-                kiosk: kiosk_id,
-                owner,
-            },
-            owner,
-        );
         public_share_object(kiosk);
-        (kiosk_id, token_id)
+        kiosk_id
     }
 
 
