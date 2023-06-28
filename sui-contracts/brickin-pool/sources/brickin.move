@@ -1,57 +1,58 @@
 module brickin::brickin {
-    use std::ascii::into_bytes;
-    use std::string::{Self, String, append_utf8};
-    use std::type_name::{get, into_string};
+    use std::type_name::{get, TypeName};
 
     use sui::balance::{Self, Balance};
     use sui::coin::{Self, Coin};
     use sui::kiosk::Kiosk;
     use sui::object::{Self, UID, ID};
-    use sui::sui::SUI;
-    use sui::table::{Self, Table};
-    use sui::transfer::{Self, transfer, public_transfer};
+    use sui::transfer::{Self, public_transfer};
     use sui::tx_context::{TxContext, sender};
 
+    use brickin::nftholder::{Self, NftHolderOwner};
     use brickin::trading;
 
+    /// Error code for Not Enough payment
     const ENotEnoughFeeToPay: u64 = 1001;
+    /// Error code for Invalid Coin Type when swap
     const ETransactionCoinNotInPool: u64 = 1002;
+    /// Error code for Not Enough Coin X
     const ENotEnoughCoinX: u64 = 1003;
+    /// Error code for Not Enough Coin Y
     const ENotEnoughCoinY: u64 = 1004;
+    /// Error code for Not Enough Coin Z
     const ENotEnoughCoinZ: u64 = 1005;
-    const ENotEnoughTrsanctionCoin: u64 = 1006;
+    /// Error code for Not Enough balance in pool to swap
+    const ENotEnoughBalanceInPool: u64 = 1006;
+    /// Error code for Invalid Transaction Coin Type to Pay
+    const EInvalidTrasnactionCoinType: u64 = 1007;
 
-    struct NftHolder has store, drop {
-        nft_id: ID,
-        kiosk_id: ID,
-        pool_id: ID,
-        transaction_amount: u64,
-        transaction_coin: String,
-    }
-
-    struct NftHolderOwner has key, store {
-        id: UID,
-        nftholder: Table<ID, ID>
-    }
-
+    /// Trading Pool for swap
+    /// account: the address to receive the fee paied by transaction maker
+    /// collection: collection holds the NFT items
+    /// curve_type
+    /// delta: price delta
+    /// fee: fee of transactions, transaction maker pays it and send to address
+    /// coin: transaction coin type
+    /// init_price: NFT initialize price
+    /// coin_sui, coin_stable, coin_self: balance of coin X,Y,Z
     struct TradePool<phantom X, phantom Y, phantom Z> has key, store {
         id: UID,
         account: address,
-        collection: vector<u8>,
+        collection: Kiosk,
         curve_type: vector<u8>,
         delta: u64,
         fee: u64,
+        coin: TypeName,
         init_price: u64,
-        nft_num: u64,
         coin_sui: Balance<X>,
         coin_stable: Balance<Y>,
         coin_self: Balance<Z>,
-        nfts: Table<ID, NftHolder>,
     }
 
-    public entry fun create_pair_nft_trade_pool<X, Y, Z>(
-        account: address,
-        collection: vector<u8>,
+
+    /// generate the trading pool after deposit the NFTs
+    public entry fun create_pair_nft_trade_pool<X, Y, Z, T>(
+        collection: Kiosk,
         curve_type: vector<u8>,
         delta: u64,
         fee: u64,
@@ -60,258 +61,141 @@ module brickin::brickin {
     ) {
         let new_pool = TradePool<X, Y, Z> {
             id: object::new(ctx),
-            account,
+            account: sender(ctx),
             collection,
             curve_type,
+            coin: get<T>(),
             delta,
             fee,
             init_price,
-            nft_num: 0,
             coin_sui: balance::zero(),
             coin_stable: balance::zero(),
             coin_self: balance::zero(),
-            nfts: table::new(ctx),
         };
         transfer::share_object(new_pool);
     }
 
-    public fun init_nftholder(ctx: &mut TxContext):ID {
-        let nftholderOwner = NftHolderOwner {
-            id: object::new(ctx),
-            nftholder: table::new<ID, ID>(ctx),
-        };
-        let holder_id = object::id(&nftholderOwner);
-        transfer(nftholderOwner, sender(ctx));
-        holder_id
+    /// Initialize the user's account
+    /// Create the NFTHolderOwner and Kiosk to hold the NFTs
+    public fun initialize_account(ctx: &mut TxContext): (ID, ID) {
+        let holder_id = nftholder::new(ctx);
+        let kiosk_id = trading::create_kiosk(ctx);
+        (kiosk_id, holder_id)
     }
 
-    public fun initialize_account(ctx: &mut TxContext): (ID, ID, ID){
-        let holder_id = init_nftholder(ctx);
-        let (kiosk_id, token_id) = trading::create_kiosk(ctx);
-        (kiosk_id, holder_id, token_id)
-    }
-
-    public fun update_balance<X, Y, Z>(trade_pool: &mut TradePool<X, Y, Z>,
-                                       coin_x: Coin<X>,
-                                       coin_y: Coin<Y>,
-                                       coin_z: Coin<Z>,
-                                       ctx: &mut TxContext): address {
-        coin::put(&mut trade_pool.coin_sui, coin_x);
-        coin::put(&mut trade_pool.coin_stable, coin_y);
-        coin::put(&mut trade_pool.coin_self, coin_z);
-        let addr = sender(ctx);
-        addr
-    }
-
-
-    public entry fun swap_coin_for_nfts<X, Y, Z, TCOIN, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
-                                                                          nft: NFT,
-                                                                          kiosk: &mut Kiosk,
-                                                                          amount: u64,
-                                                                          payment: Coin<SUI>,
-                                                                          nftholderOwner: NftHolderOwner,
-                                                                          ctx: &mut TxContext) {
-        assert!(coin::value(&payment) >= trade_pool.fee, ENotEnoughFeeToPay);
-        assert!(
-            get<TCOIN>() == get<X>() || get<TCOIN>() == get<Y>() || get<TCOIN>() == get<Y>(),
-            ETransactionCoinNotInPool
-        );
-        public_transfer(coin::split(&mut payment, trade_pool.fee, ctx), trade_pool.account);
-        public_transfer(payment, sender(ctx));
+    /// Function to deposit the NFT to Kiosk
+    public fun deposit_nft<NFT: key + store>(kiosk: &mut Kiosk,
+                                             nft: NFT,
+                                             nftHolderOwner: NftHolderOwner,
+                                             ctx: &mut TxContext) {
         let nft_id = object::id(&nft);
         let kiosk_id = object::id(kiosk);
-        let pool_id = object::id(trade_pool);
-        let coin_str = string::utf8(b"");
-        append_utf8(&mut coin_str, into_bytes(into_string(get<TCOIN>())));
-        table::add(&mut nftholderOwner.nftholder, nft_id, pool_id);
-        transfer(nftholderOwner, sender(ctx));
-        table::add(&mut trade_pool.nfts, nft_id, NftHolder {
-            nft_id,
-            kiosk_id,
-            pool_id,
-            transaction_amount: amount,
-            transaction_coin: coin_str
-        });
-        let nft_num = &mut trade_pool.nft_num;
-        *nft_num = *nft_num + 1;
-        trading::deposit_nft<NFT>(kiosk, nft, ctx);
+        nftholder::add_nftholder(nftHolderOwner, nft_id, kiosk_id, ctx);
+        trading::deposit_nft(kiosk, nft, ctx);
+    }
+
+    /// Function to pay the fee
+    fun pay<T>(payment: Coin<T>, amount: u64, reciptant: address,  ctx: &mut TxContext){
+        assert!(coin::value(&payment) >= amount, ENotEnoughFeeToPay);
+        public_transfer(coin::split(&mut payment, amount, ctx), reciptant);
+        public_transfer(payment, sender(ctx));
+    }
+
+    /// Split the balance of `T` from Pool
+    /// and send to transaction maker when swap the NFT in
+    fun split_from_balance<T>(self: &mut Balance<T>, amount: u64, ctx: &mut TxContext){
+        assert!(balance::value(self) >= amount, ENotEnoughBalanceInPool);
+        let coin_t = coin::zero<T>(ctx);
+        coin::join(&mut coin_t, coin::take<T>(self, amount, ctx));
+        public_transfer(coin_t, sender(ctx));
+    }
+
+    /// Add the balance of `T` into pool
+    /// after swap the NFT out
+    fun add_to_balance<T>(self: &mut Balance<T>, coin_t: Coin<T>, amount: u64, ctx: &mut TxContext){
+        let coin_self_in = coin::split(&mut coin_t, amount, ctx);
+        coin::put(self, coin_self_in);
+        public_transfer(coin_t, sender(ctx));
+    }
+
+    /// Swap Coin X by NFTs
+    public entry fun swap_sui_for_nfts<X, Y, Z, T, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
+                                                                     nft_id: ID,
+                                                                     payment: Coin<T>,
+                                                                     coin_sui: Coin<X>,
+                                                                     nftholderOwner: NftHolderOwner,
+                                                                     ctx: &mut TxContext
+    ) {
+        assert!(get<T>() == trade_pool.coin, EInvalidTrasnactionCoinType);
+        assert!(coin::value(&coin_sui) >= trade_pool.init_price, ENotEnoughCoinX);
+        pay(payment, trade_pool.fee, trade_pool.account, ctx);
+        nftholder::remove_nftholder(nftholderOwner, nft_id, ctx);
+        trading::withdraw_nft<NFT>(&mut trade_pool.collection, nft_id, ctx);
+        add_to_balance<X>(&mut trade_pool.coin_sui, coin_sui, trade_pool.init_price, ctx);
+    }
+
+    /// Swap Coin Y by NFTs
+    public entry fun swap_stable_coin_for_nfts<X, Y, Z, T, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
+                                                                             nft_id: ID,
+                                                                             payment: Coin<T>,
+                                                                             coin_stable: Coin<Y>,
+                                                                             nftholderOwner: NftHolderOwner,
+                                                                             ctx: &mut TxContext
+    ) {
+        assert!(get<T>() == trade_pool.coin, EInvalidTrasnactionCoinType);
+        assert!(coin::value(&coin_stable) >= trade_pool.init_price, ENotEnoughCoinX);
+        pay(payment, trade_pool.fee, trade_pool.account, ctx);
+        nftholder::remove_nftholder(nftholderOwner, nft_id, ctx);
+        trading::withdraw_nft<NFT>(&mut trade_pool.collection, nft_id, ctx);
+        add_to_balance<Y>(&mut trade_pool.coin_stable, coin_stable, trade_pool.init_price, ctx);
+    }
+
+    /// Swap Coin Z by NFTs
+    public entry fun swap_self_coin_for_nfts<X, Y, Z, T, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
+                                                                           nft_id: ID,
+                                                                           payment: Coin<T>,
+                                                                           coin_self: Coin<Z>,
+                                                                           nftholderOwner: NftHolderOwner,
+                                                                           ctx: &mut TxContext
+    ) {
+        assert!(get<T>() == trade_pool.coin, EInvalidTrasnactionCoinType);
+        assert!(coin::value(&coin_self) >= trade_pool.init_price, ENotEnoughCoinX);
+        pay(payment, trade_pool.fee, trade_pool.account, ctx);
+        nftholder::remove_nftholder(nftholderOwner, nft_id, ctx);
+        trading::withdraw_nft<NFT>(&mut trade_pool.collection, nft_id, ctx);
+        add_to_balance<Z>(&mut trade_pool.coin_self, coin_self, trade_pool.init_price, ctx);
+    }
+
+    /// Withdraw the NFT by the person who deposited it.
+    public entry fun withdraw_nft<X, Y, Z, T, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
+                                                                nft_id: ID,
+                                                                nftholderOwner: NftHolderOwner,
+                                                                ctx: &mut TxContext) {
+        trading::withdraw_nft<NFT>(&mut trade_pool.collection, nft_id, ctx);
+        nftholder::remove_nftholder(nftholderOwner, nft_id, ctx);
+    }
+
+    /// Swap the Coin X, Y, Z by deposit the NFT to pool
+    public fun withdraw_coin<X, Y, Z, T, TCOIN, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
+                                                                  nft: NFT,
+                                                                  payment: Coin<T>,
+                                                                  nftholderOwner: NftHolderOwner,
+                                                                  ctx: &mut TxContext) {
+        assert!(
+            get<TCOIN>() == get<X>() || get<TCOIN>() == get<Y>() || get<TCOIN>() == get<Z>(),
+            ETransactionCoinNotInPool
+        );
+        assert!(get<T>() == trade_pool.coin, EInvalidTrasnactionCoinType);
+        pay(payment, trade_pool.fee, trade_pool.account, ctx);
+        deposit_nft<NFT>(&mut trade_pool.collection, nft, nftholderOwner, ctx);
         if (get<TCOIN>() == get<X>()) {
-            assert!(balance::value(&trade_pool.coin_sui) >= amount, ENotEnoughCoinX);
-            let coin_x = coin::zero<X>(ctx);
-            coin::join(&mut coin_x, coin::take<X>(&mut trade_pool.coin_sui, amount, ctx));
-            public_transfer(coin_x, sender(ctx));
+            split_from_balance<X>(&mut trade_pool.coin_sui, trade_pool.init_price, ctx);
         };
         if (get<TCOIN>() == get<Y>()) {
-            assert!(balance::value(&trade_pool.coin_sui) >= amount, ENotEnoughCoinX);
-            let coin_y = coin::zero<Y>(ctx);
-            coin::join(&mut coin_y, coin::take<Y>(&mut trade_pool.coin_stable, amount, ctx));
-            public_transfer(coin_y, sender(ctx));
+            split_from_balance<Y>(&mut trade_pool.coin_stable, trade_pool.init_price, ctx);
         };
         if (get<TCOIN>() == get<Z>()) {
-            assert!(balance::value(&trade_pool.coin_sui) >= amount, ENotEnoughCoinX);
-            let coin_z = coin::zero<Z>(ctx);
-            coin::join(&mut coin_z, coin::take<Z>(&mut trade_pool.coin_self, amount, ctx));
-            public_transfer(coin_z, sender(ctx));
+            split_from_balance<Z>(&mut trade_pool.coin_self, trade_pool.init_price, ctx);
         };
     }
-
-    /*
-    public entry fun swap_sui_for_nfts<X, Y, Z>(
-        trade_pool: &mut TradePool<X, Y, Z>,
-        coin_sui: &mut Coin<X>,
-        ctx: &mut TxContext
-    ): bool {
-        // let pool = borrow_global_mut<TradePool>(trade_pool_address);
-        // let price_per_nft = pool.init_price;
-        // let nft_amount_to_buy = amount_of_coins / price_per_nft;
-
-        // let nfts_in_pool = Vector::length(&pool.nfts);
-
-
-        // if (nft_amount_to_buy > nfts_in_pool) {
-        //     return false;
-        // }
-
-        // let mut i = 0;
-        // while (i < nft_amount_to_buy) {
-        //     let nft = Vector::pop_back(&mut pool.nfts);
-        //     i = i + 1;
-        // }
-
-        true
-    }
-
-    public entry fun swap_stable_coin_for_nfts<X, Y, Z>(
-        trade_pool: &mut TradePool<X, Y, Z>,
-        coin_stable: &mut Coin<Y>,
-        ctx: &mut TxContext
-    ): bool {
-        // let pool = borrow_global_mut<TradePool>(trade_pool_address);
-        // let price_per_nft = pool.init_price;
-        // let nft_amount_to_buy = amount_of_coins / price_per_nft;
-
-        // let nfts_in_pool = Vector::length(&pool.nfts);
-
-
-        // if (nft_amount_to_buy > nfts_in_pool) {
-        //     return false;
-        // }
-
-        // let mut i = 0;
-        // while (i < nft_amount_to_buy) {
-        //     let nft = Vector::pop_back(&mut pool.nfts);
-        //     i = i + 1;
-        // }
-
-        true
-    }
-
-    public entry fun swap_self_coin_for_nfts<X, Y, Z>(
-        trade_pool: &mut TradePool<X, Y, Z>,
-        coin_self: &mut Coin<Z>,
-        ctx: &mut TxContext
-    ): bool {
-        // let pool = borrow_global_mut<TradePool>(trade_pool_address);
-        // let price_per_nft = pool.init_price;
-        // let nft_amount_to_buy = amount_of_coins / price_per_nft;
-
-        // let nfts_in_pool = Vector::length(&pool.nfts);
-
-
-        // if (nft_amount_to_buy > nfts_in_pool) {
-        //     return false;
-        // }
-
-        // let mut i = 0;
-        // while (i < nft_amount_to_buy) {
-        //     let nft = Vector::pop_back(&mut pool.nfts);
-        //     i = i + 1;
-        // }
-
-        true
-    }
-
-
-    */
-    // TODO: swap NFT for three types.
-
-    fun increase_pool_balance<T>(self: &mut Balance<T>,
-                                 balance: Balance<T>) {
-        balance::join(self, balance);
-    }
-
-    // Only Owner
-    public entry fun withdraw_nft_from_x<X, Y, Z, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
-                                                              nft_id: ID,
-                                                              kiosk: &mut Kiosk,
-                                                              amount: u64,
-                                                              payment: Coin<SUI>,
-                                                              coin_x: Coin<X>,
-                                                              nftholderOwner: NftHolderOwner,
-                                                              ctx: &mut TxContext) {
-        assert!(coin::value(&payment) >= trade_pool.fee, ENotEnoughFeeToPay);
-        assert!(coin::value(&coin_x) >= amount, ENotEnoughTrsanctionCoin);
-        public_transfer(coin::split(&mut payment, trade_pool.fee, ctx), trade_pool.account);
-        public_transfer(payment, sender(ctx));
-        let _pool_id = table::remove(&mut nftholderOwner.nftholder, nft_id);
-        let _nftholder = table::remove(&mut trade_pool.nfts, nft_id);
-        transfer(nftholderOwner, sender(ctx));
-        let nft_num = &mut trade_pool.nft_num;
-        *nft_num = *nft_num - 1;
-        trading::withdraw_nft<NFT>(kiosk, nft_id, ctx);
-        let coin_x_in = coin::split<X>(&mut coin_x, amount, ctx);
-        coin::put(&mut trade_pool.coin_sui, coin_x_in);
-        public_transfer(coin_x, sender(ctx));
-    }
-
-    public entry fun withdraw_nft_from_y<X, Y, Z, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
-                                                              nft_id: ID,
-                                                              kiosk: &mut Kiosk,
-                                                              amount: u64,
-                                                              payment: Coin<SUI>,
-                                                              coin_y: Coin<Y>,
-                                                              nftholderOwner: NftHolderOwner,
-                                                              ctx: &mut TxContext) {
-        assert!(coin::value(&payment) >= trade_pool.fee, ENotEnoughFeeToPay);
-        assert!(coin::value(&coin_y) >= amount, ENotEnoughTrsanctionCoin);
-        public_transfer(coin::split(&mut payment, trade_pool.fee, ctx), trade_pool.account);
-        public_transfer(payment, sender(ctx));
-        let _pool_id = table::remove(&mut nftholderOwner.nftholder, nft_id);
-        let _nftholder = table::remove(&mut trade_pool.nfts, nft_id);
-        transfer(nftholderOwner, sender(ctx));
-        let nft_num = &mut trade_pool.nft_num;
-        *nft_num = *nft_num - 1;
-        trading::withdraw_nft<NFT>(kiosk, nft_id, ctx);
-        let coin_y_in = coin::split<Y>(&mut coin_y, amount, ctx);
-        coin::put(&mut trade_pool.coin_stable, coin_y_in);
-        public_transfer(coin_y, sender(ctx));
-    }
-
-    public entry fun withdraw_nft_from_z<X, Y, Z, NFT: key + store>(trade_pool: &mut TradePool<X, Y, Z>,
-                                                              nft_id: ID,
-                                                              kiosk: &mut Kiosk,
-                                                              amount: u64,
-                                                              payment: Coin<SUI>,
-                                                              coin_z: Coin<Z>,
-                                                              nftholderOwner: NftHolderOwner,
-                                                              ctx: &mut TxContext) {
-        assert!(coin::value(&payment) >= trade_pool.fee, ENotEnoughFeeToPay);
-        assert!(coin::value(&coin_z) >= amount, ENotEnoughTrsanctionCoin);
-        public_transfer(coin::split(&mut payment, trade_pool.fee, ctx), trade_pool.account);
-        public_transfer(payment, sender(ctx));
-        let _pool_id = table::remove(&mut nftholderOwner.nftholder, nft_id);
-        let _nftholder = table::remove(&mut trade_pool.nfts, nft_id);
-        transfer(nftholderOwner, sender(ctx));
-        let nft_num = &mut trade_pool.nft_num;
-        *nft_num = *nft_num - 1;
-        trading::withdraw_nft<NFT>(kiosk, nft_id, ctx);
-        let coin_z_in = coin::split<Z>(&mut coin_z, amount, ctx);
-        coin::put(&mut trade_pool.coin_self, coin_z_in);
-        public_transfer(coin_z, sender(ctx));
-    }
-    /*
-    // Only Owner
-    public fun withdraw_coin<X, Y, Z>(trade_pool: &mut TradePool<X, Y, Z>, coin_type: u64, ctx: &mut TxContext): bool {
-        true
-    }*/
 }
