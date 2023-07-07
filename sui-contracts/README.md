@@ -23,17 +23,17 @@ public entry fun create_pair_nft_trade_pool<X, Y, Z, T, NFT: key + store>(
     ) :ID
 ```
 
-1. Click on `NFT Trade Pool`
+#### 1. Click on `NFT Trade Pool`
 
 ![Create](images/create.png)
 
-2. Pass `Kiosk` ID and `Coin Type` to below fields:
+#### 2. Pass `Kiosk` ID and `Coin Type` to below fields:
 
 ![Collection and coin](images/Collection and Coin.png)
 
 `NFT` filed matches `collection`, and `Coin` field matches type argument `T`.
 
-3. Confirm and Create the Pool.
+#### 3. Confirm and Create the Pool
 
 ![Confirm](images/confirm.png)
 
@@ -47,7 +47,7 @@ Follow below mapping table to pass value to parameters:
 | `Pool Trading Fee` | `fee`        |
 | `Add Items`        | `nft`        |
 
-4. Other Parameters
+#### 4. Other Parameters
 
 `X`, `Y`, `Z` and `NFT` must be passed when calling the function.
 
