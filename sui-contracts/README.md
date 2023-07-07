@@ -1,4 +1,57 @@
-## Command: Publish the smart contractors
+## Mapping: Deapp and sui contracts
+
+### Create the Kiosk
+
+`Kiosk` is provided by standard sui, is a primitive for building open, zero-fee trading platforms with a high degree of customization over transfer policies.
+
+### Create the Pool
+
+Call function `create_pair_nft_trade_pool` to generate the Trading Pool, 5 type-args need to be passed:
+- X, Y, Z: coin types held in the pool with balance
+- T: transaction coin type
+- NFT: NFT type
+
+```rust
+public entry fun create_pair_nft_trade_pool<X, Y, Z, T, NFT: key + store>(
+        collection: &mut Kiosk,
+        curve_type: vector<u8>,
+        delta: u64,
+        fee: u64,
+        init_price: u64,
+        nft: NFT,
+        ctx: &mut TxContext,
+    ) :ID
+```
+
+#### 1. Click on `NFT Trade Pool`
+
+![Create](images/create.png)
+
+#### 2. Pass `Kiosk` ID and `Coin Type` to below fields:
+
+![Collection and coin](images/Collection and Coin.png)
+
+`NFT` filed matches `collection`, and `Coin` field matches type argument `T`.
+
+#### 3. Confirm and Create the Pool
+
+![Confirm](images/confirm.png)
+
+Follow below mapping table to pass value to parameters:
+
+| Page field         | Parameter    |
+|:-------------------|:-------------|
+| `Start Price`      | `init_price` |
+| `Bonding Curve`    | `curve_type` |
+| `Start Delta`      | `delta`      |
+| `Pool Trading Fee` | `fee`        |
+| `Add Items`        | `nft`        |
+
+#### 4. Other Parameters
+
+`X`, `Y`, `Z` and `NFT` must be passed when calling the function.
+
+## Testing Cases
 
 ### Publish
 
@@ -8,206 +61,178 @@ The publishing action can be done under the sui project package, executable comm
 sui client publish --gas-budget 300000000
 ```
 
-## Command: Preparatory Work
-
 ### Define the variables
 
-Define the variables in `Terminal` for testing usage, below is sample, please update the correct information when
-testing from your end.
+Define the variables, below are real testing cases:
+定义变量，以下均为实际测试用例：
 
-```bash
-# Package ID of `test` .
-COINPKG="0x9a55590557ecc733ab5e7c4e68af95196da3d2fd030bfd4c704002667d8d4ed5"
-CNYA="0x9a55590557ecc733ab5e7c4e68af95196da3d2fd030bfd4c704002667d8d4ed5::cnya::CNYA"
-CNYACAP="0x5f08b2ff8ed285888696b0feab84fc247e74a39b24e327ea1fa9de323874c30a"
-CNYU="0x9a55590557ecc733ab5e7c4e68af95196da3d2fd030bfd4c704002667d8d4ed5::cnyu::CNYU"
-CNYUCAP="0x35b0d420e5b793dc4f831015b0d319b56e46789d8f338a79a853acd680bb8d11"
-CNYW="0x9a55590557ecc733ab5e7c4e68af95196da3d2fd030bfd4c704002667d8d4ed5::cnyw::CNYW"
-CNYWCAP="0x11cc17a6a2ac3c3994d735d76f6e4ffd9dc7c3e1471a35a94b7502bcb17c6b75"
-NFTTYPE="0x9a55590557ecc733ab5e7c4e68af95196da3d2fd030bfd4c704002667d8d4ed5::nft_driver::NFT"
-# Package ID of `brickin-pool`
-SWAPPKG="0x83c7992590d3674d6b41ee4ece54400ad58f4c1129d847372f51bb031751fadd"
+```shell
+SWAPPKG="0x4069e2f456c6fe69bfc6c35bc33b6caee8a786a8f73e0878b7f8ae046655fc26"
+CNYA="0x4069e2f456c6fe69bfc6c35bc33b6caee8a786a8f73e0878b7f8ae046655fc26::cnya::CNYA"
+CNYACAP="0x97812260131455b0f588fcba4ec267537fc9dab04c9ebcef2fb194f689134455"
+CNYU="0x4069e2f456c6fe69bfc6c35bc33b6caee8a786a8f73e0878b7f8ae046655fc26::cnyu::CNYU"
+CNYUCAP="0xa05bdfca8fa35c35732fc0475fc3dbb5760b64f68cc493339d05af6078f50112"
+CNYW="0x4069e2f456c6fe69bfc6c35bc33b6caee8a786a8f73e0878b7f8ae046655fc26::cnyw::CNYW"
+CNYWCAP="0x62e876fd67e7fe6b296c6ce4b9144134e504110041cf654f3e99b3f8eca806ca"
+NFTTYPE="0x4069e2f456c6fe69bfc6c35bc33b6caee8a786a8f73e0878b7f8ae046655fc26::nft_driver::NFT"
 ```
 
-### Mint the coins
+### Mint Coins for Pocket Address 给钱包地址 Mint 代币
 
-Calling the function `mint_coin` to mint the coins `CNYA`, `CNYU`, `CNYW`.
+All mint functions can return the Coin ID, so variable `COINID` could be defined.
 
-```rust
-    /// Sample function from module cnya
-    public entry fun mint_coin(
-        cap: &mut TreasuryCap<CNYA>, 
-        amount: u64, 
-        ctx: &mut TxContext) 
-```
-sui client command:
+#### Mint CNYA
 
-```zsh
-sui client call --package $COINPKG\
-                --module cnyu \
-                --function mint_coin \
-                --gas-budget 100000000 \
-                --args $CNYUCAP 1000000000000
+```shell
+sui client call --package $SWAPPKG\
+		        --module cnya \
+		        --function mint_coin \
+		        --gas-budget 100000000 \
+		        --args $CNYACAP 1000000000000
 ```
 
-### Mint one NFT
+#### Mint CNYU
 
-NFT can be minted from `mint_nft` in module `nft_driver`.
-
-```rust
-    public entry fun mint_nft(
-        name: String, 
-        url: String, 
-        ctx: &mut TxContext)
+```shell
+sui client call --package $SWAPPKG\
+		        --module cnyu \
+		        --function mint_coin \
+	        	--gas-budget 100000000 \
+	        	--args $CNYUCAP 1000000000000
 ```
 
-sui client command:
-```zsh
-sui client call --package $COINPKG\
+#### Mint CNYW
+
+```shell
+sui client call --package $SWAPPKG\
+		        --module cnyw \
+		        --function mint_coin \
+		        --gas-budget 100000000 \
+		        --args $CNYWCAP 1000000000000
+```
+
+### Create Kiosk
+
+Call function `initialize_account` to create the `Kiosk`, which is collection of NFTs.
+This function can return `Kiosk` IDs after execution
+
+**So it can define another variable `KIOSKID`**.
+
+```shell
+sui client call --package $SWAPPKG \
+                --module brickin \
+                --function initialize_account \
+                --gas-budget 100000000 
+```
+
+```shell
+KIOSKID="0x36bed25dffef21dfb525f022aa3380f68f6e5e06066331f8bcf50d343a71b4a7"
+```
+
+### Mint the NFT for pocket address.
+
+Call function `mint_nft` in module `nft_driver` to mint one NFT for pocket address.
+The function can return the NFT ID.
+
+```shell
+sui client call --package $SWAPPKG\
                 --module nft_driver \
                 --function mint_nft \
                 --gas-budget 100000000 \
                 --args 'NFT' "INITURL"
 ```
+```shell
+NFTID="0x9da2d45f9cb5127e6fce879a1e3d29f16e06f8561ad8cd257f370088e4bcec05"
+```
 
-### Generate the Swap pool
+### Generate the Trading Pool
 
-Please pass the type arguments and required parameters to this function `create_pair_nft_trade_pool`
+Call function `create_pair_nft_trade_pool` to generate the Trading Pool, 5 type-args need to be passed:
+- X, Y, Z: coin types held in the pool with balance
+- T: transaction coin type
+- NFT: NFT type
+
+The function will return ID of trading pool.
 
 ```rust
-    public entry fun create_pair_nft_trade_pool<X, Y, Z>(
-        account: address,
-        collection: vector<u8>,
+public entry fun create_pair_nft_trade_pool<X, Y, Z, T, NFT: key + store>(
+        collection: &mut Kiosk,
         curve_type: vector<u8>,
         delta: u64,
         fee: u64,
         init_price: u64,
+        nft: NFT,
         ctx: &mut TxContext,
-    )
+    ) :ID
 ```
-sui client command:
 
-```zsh
-sui client call --package $SWAPPKG 
-                --module brickin 
-                --function create_pair_nft_trade_pool 
+```shell
+sui client call --package $SWAPPKG\
+		        --module brickin \
+                --function create_pair_nft_trade_pool \
                 --gas-budget 100000000 \
-                --args 0x7ca598a4eb9a9aea07720bb18e3fad68581f6712ab5517b798cc12c9edcc303f "Collection" "1TO1" 1 100000000 25000000000\
-                --type-args $CNYA $CNYU $CNYW
+                --args $KIOSKID "L" 1 100000000 25000000000 $NFTID\
+                --type-args $CNYA $CNYU $CNYW 0x2::sui::SUI $NFTTYPE
 ```
 
-### Generate the Kiosk/NftHolderOwner
-
-Kiosk is used to hold the NFT items, it is a shared objects.
-
-```rust
-    public fun create_kiosk(ctx: &mut TxContext):(ID, ID)
-```
-sui client command:
-```zsh
-sui client call --package $SWAPPKG \
-                --module trading \
-                --function create_kiosk \
-                --gas-budget 100000000
+```shell
+POOLID="0x46da550175e79bc74f00d2f916eeb7ffb764d98a8f172e0f2ce785683634c2df"
 ```
 
-NftHolderOwner is voucher transferred to the NFT owner who pledges the NFT.
+### Deposit the NFT
 
-```rust
-    public fun init_nftholder(ctx: &mut TxContext) 
-```
-sui client command:
-```zsh
-sui client call --package $SWAPPKG \
+Deposit the NFT without coin transactions.
+
+```shell
+sui client call --package $SWAPPKG\
                 --module brickin \
-                --function init_nftholder \
-                --gas-budget 100000000 
+                --function deposit_nft \
+                --gas-budget 100000000\
+                --args $KIOSKID $NFTID \
+                --type-args $NFTTYPE
 ```
-
-### Define variables for IDs of pool, kiosk and NftHolderOwner
-
-```zsh
-POOLID="0xea12c7acbc160ddc420e6eda677480e162edda1d136cfb39af83e00138c57433"
-HOLDERID="0x8a77b718ca0b92829142d007f155a2847cf3b71fc70bb7fd8181a6b5ad94ee42"
-KIOSKID="0x8105ea6b6891e16fb3bdfcd531287c662b755f0cf35792cf7e5379562aa24262"
-```
-
-### Transfer balance to the Pool
-
-Before execute the swap actions, please increase the balance from Coins you had minted.
-
-```rust
-    public fun update_balance<X, Y, Z>(
-        trade_pool: &mut TradePool<X, Y, Z>,
-        coin_x: Coin<X>,
-        coin_y: Coin<Y>,
-        coin_z: Coin<Z>,
-        ctx: &mut TxContext): address
-```
-sui client command:
-```zsh
-sui client call --package $SWAPPKG \
-                  --module brickin \
-                  --function update_balance \
-                  --gas-budget 100000000 \
-                  --args $POOLID \
-                         0xe05c44dbdc70149acfbd08de779804e2a23def958978223f2363ab7d40fcffd1 \
-			             0x5f7b0fe8dbf0ecb1d6c876991c79993c050c780b8c99a327c772ae9d6c237e6a \
-                         0xcfbc55f2976604dad0a1e2b76ed869732dae5b17ca07c243bef3ae85bd043339 \
-                  --type-args $CNYA $CNYU $CNYW
-```
-
-## Command: SWAP NFT and Coins
 
 ### Deposit the NFT and swap coins
 
-The function `swap_coin_for_nfts` required to pass 5 type arguments, except the three Coin types that was held in swap
-pool with balance,
-we need also pass the coin type as 4th argument that you want to swap from the pool, the last one is the NFT type you
-want to deposit.
+Below are the functions to swap a NFT by depositing different coins:
 
-```rust
-    public entry fun swap_coin_for_nfts<X, Y, Z, TCOIN, NFT: key + store>(
-        trade_pool: &mut TradePool<X, Y, Z>,
-        nft: NFT,sss
-        kiosk: &mut Kiosk,
-        amount: u64,
-        payment: Coin<SUI>,
-        nftholderOwner: NftHolderOwner,
-        ctx: &mut TxContext): bool
-```
+- swap_sui_coin_for_nfts
+- swap_stable_coin_for_nfts
+- swap_self_coin_for_nfts
+
+Let's take `swap_stable_coin_for_nfts` as an example, it required to pass 5 type arguments:
+- X, Y, Z: coin types held in the pool with balance
+- T: transaction Coin type
+- NFT: NFT type.
 
 ```bash
 sui client call --package $SWAPPKG \
                 --module brickin \
-                --function swap_coin_for_nfts \
+                --function swap_stable_coin_for_nfts \
                 --gas-budget 100000000 \
                 --args $POOLID \
-                       0x19186d1a3568a7b26accba24f4cc8e5226ed96a8ea597c19dac49c3c866f3334 \
-			           $KIOSKID 2000000000 \
-                       0xe336efde9a74a096e4fbc83fb8f4456e7320ffe2daf5f19ea8ae96f7dc4aa310 $HOLDERID \
-                --type-args $CNYA $CNYU $CNYW $CNYA $NFTTYPE
+                       $KIOSKID $NFTID \
+                       0x5e64e47f09b4d61af4f994d5d8206a159c938f1919cac1e7cd2bf10f80f544f6  \
+                       0x2650f72b9667c67d7774c61bec52bf55fb8dd96ef8478ee718bc95ed40bd7130  \
+                --type-args $CNYA $CNYU $CNYW 0x2::sui::SUI $NFTTYPE
 ```
 
 ### Withdraw the NFT with coin
 
-Three functions are provided to withdraw the NFT with corresponding coin type:
-- `withdraw_nft_from_x`: withdraw the NFT by Coin X
-- `withdraw_nft_from_y`: withdraw the NFT by Coin Y
-- `withdraw_nft_from_z`: withdraw the NFT by Coin Z
-
-Sample function:
+`withdraw_coin` can withdraw the coin from trading pool by depositing the NFT.
+6 type arguments:
+- X, Y, Z: coin types held in the pool with balance
+- T: transaction coin type
+- TCOIN: coin type that swap out
+- NFT: NFT type
 
 ```rust
-    public fun withdraw_nft_from_x<X, Y, Z, NFT: key + store>(
+public fun withdraw_coin<X, Y, Z, T, TCOIN, NFT: key + store>(
         trade_pool: &mut TradePool<X, Y, Z>,
-        nft_id: ID,
         kiosk: &mut Kiosk,
-        amount: u64,
-        payment: Coin<SUI>,
-        coin_x: Coin<X>,
-        nftholderOwner: NftHolderOwner,
-        ctx: &mut TxContext): bool
+        nft: NFT,
+        payment: Coin<T>,
+        ctx: &mut TxContext) 
 ```
 
 sui client command:
@@ -215,13 +240,10 @@ sui client command:
 ```zsh
 sui client call --package $SWAPPKG \
                   --module brickin \
-                  --function withdraw_nft_from_y \
+                  --function withdraw_coin \
                   --gas-budget 100000000 \
                   --args $POOLID \
-                         0x19186d1a3568a7b26accba24f4cc8e5226ed96a8ea597c19dac49c3c866f3334 \
-			             $KIOSKID 3000000000 \
+                         $KIOSKID 0x6f4ed64655d4c4b2a0df162931841cf37c89acebc652f0928540917794529ac8 \
                          0xe336efde9a74a096e4fbc83fb8f4456e7320ffe2daf5f19ea8ae96f7dc4aa310 \
-			             0x6ce1d7354d3fb5ed5b5b1e0ef0865274d0b915f370ea8d6fd1ecb89417a53b06 \
-                         $HOLDERID \
-                  --type-args $CNYA $CNYU $CNYW $NFTTYPE
+                  --type-args $CNYA $CNYU $CNYW 0x2::sui::SUI $CNYU $NFTTYPE
 ```

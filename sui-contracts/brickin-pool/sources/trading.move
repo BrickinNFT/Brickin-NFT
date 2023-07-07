@@ -2,7 +2,7 @@ module brickin::trading {
 
     use sui::object::{Self, ID};
     use sui::tx_context::{TxContext, sender};
-    use sui::transfer::{public_share_object, public_transfer};
+    use sui::transfer::{public_transfer, public_share_object};
     use sui::kiosk::{Self, Kiosk, KioskOwnerCap, uid_mut};
     use sui::dynamic_field::{Self as df};
     use sui::vec_set::{Self, VecSet};
