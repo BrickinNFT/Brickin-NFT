@@ -7,22 +7,22 @@ const links = [
   {
     name: 'twitter',
     imgSrc: twitter,
-    link: '#',
+    link: 'https://twitter.com/0xbrickin',
   },
-  {
-    name: 'in',
-    imgSrc: ins,
-    link: '#',
-  },
-  {
-    name: 'facebook',
-    imgSrc: fb,
-    link: '#',
-  },
+  // {
+  //   name: 'in',
+  //   imgSrc: ins,
+  //   link: '#',
+  // },
+  // {
+  //   name: 'facebook',
+  //   imgSrc: fb,
+  //   link: '#',
+  // },
   {
     name: 'github',
     imgSrc: github,
-    link: '#',
+    link: 'https://github.com/BrickinNFT',
   },
 ]
 
@@ -38,7 +38,7 @@ export default function Footer() {
               src={item.imgSrc}
               alt={item.name}
               className="h-[24px] mx-2 cursor-pointer"
-              onClick={() => console.log(item.link)}
+              onClick={() => open(item.link, '_blank')}
             />
           )
         })}
