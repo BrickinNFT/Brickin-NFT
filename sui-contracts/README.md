@@ -129,7 +129,7 @@ public entry fun create_pair_nft_trade_pool<X, Y, Z, NFT: key + store>(
 
 2. Map `NFT` filed to `collection`, and `Coin` to type argument `Z`.
 
-   ![Collection and coin](images/Collection and Coin.png)
+   ![Collection and coin](images/collection%20and%20coin.png)
 
 3. Confirm and Create the Pool
 
