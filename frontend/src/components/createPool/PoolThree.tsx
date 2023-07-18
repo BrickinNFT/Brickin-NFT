@@ -18,7 +18,8 @@ export default function PoolOne(props: any) {
       poolInfoSnap.delta === '' ||
       poolInfoSnap.fee == '' ||
       poolInfoSnap.maxVolume === '' ||
-      poolInfoSnap.nftNumber === ''
+      poolInfoSnap.nftNumber === '' ||
+      poolInfo.nft === ''
     ) {
       return false
     }
@@ -159,8 +160,10 @@ export default function PoolOne(props: any) {
                 <div className="flex justify-between items-center w-full">
                   <input
                     type="text"
-                    placeholder="nfts"
+                    placeholder="nft"
                     className=" flex-[5] placeholder:text-placeholder text-sm border-input-border border border-solid rounded-md outline-none flex h-10 px-3 py-2 my-2"
+                    onChange={(e) => (poolInfo.nft = e.target.value)}
+                    value={poolInfoSnap.nft}
                   />
                   <button className={cn(' flex-[1] ml-2 rounded-lg px-4 py-2 text-[#fff] cursor-pointer bg-purple')}>
                     Add

@@ -7,7 +7,7 @@ import PoolTwo from '@/components/createPool/PoolTwo'
 import PoolThree from '@/components/createPool/PoolThree'
 import { poolInfo } from '@/models/createPool'
 
-import { chainName, chainRpc, packageID, sharedObjectID, CNYA, CNYU, CNYW } from '@/config/config.json'
+import { chainName, chainRpc, packageID, sharedObjectID, CNYA, CNYU, CNYW, NFTTYPE } from '@/config/config.json'
 
 import { useWallet, ConnectModal } from '@suiet/wallet-kit'
 import { TransactionBlock, JsonRpcProvider, Connection } from '@mysten/sui.js'
@@ -41,14 +41,14 @@ export default function currentPool() {
       tx.moveCall({
         target: packageID as any,
         arguments: [
-          tx.pure(address),
-          tx.pure(poolInfoSnap.nfts),
+          tx.pure(poolInfo.nfts),
           tx.pure('1TO1'),
-          tx.pure(poolInfoSnap.delta),
+          tx.pure(poolInfo.delta),
           tx.pure(poolInfoSnap.fee),
           tx.pure(poolInfoSnap.startPrice),
+          tx.pure(poolInfoSnap.nft),
         ],
-        typeArguments: [CNYA, CNYU, CNYW],
+        typeArguments: [CNYA, CNYU, CNYW, NFTTYPE],
       })
       tx.transferObjects([_coin], tx.pure(wallet.address))
       history.push('/processingScreen')
