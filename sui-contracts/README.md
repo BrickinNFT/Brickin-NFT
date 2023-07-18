@@ -22,27 +22,27 @@ The test coins decimals are 9, which is following the same setup for SUI.
 User can mint the test coins from [sui testnet explorer](https://suiexplorer.com/?network=testnet), below are steps:
 
 1. Access the explorer, and query the package by copying the value of `SWAPPKG` defined at [Define the variables](README.md#define-the-variables).
-   ![Query Package](./images/query_package.png)
+   ![Query Package](images/query_package.png)
 
 2. Test Coin/NFT modules could be found at left bottom.
-   ![modules](./images/modules.png)
+   ![modules](images/modules.png)
 
 3. Choose `cnya`, the executable function `mint_coin` could be found at the right side.
-   ![cnya](./images/cnya.png)
+   ![cnya](images/cnya.png)
 
 4. Pass the parameter values:
    - Arg0: value of `CNYACAP` defined at [Define the variables](README.md#define-the-variables).
    - Arg1: Input the amount you want to mint
 
 5. Click on `Execute` and `Approve` the signature.
-   ![Execution](./images/execution.png)
-   ![sign](./images/sign.png)
+   ![Execution](images/execution.png)
+   ![sign](images/sign.png)
 
 6. Repeat 1-4 to mint `CNYU` and `CNYW`, please pay attention to pass the correct `Cap` value to corresponding Coin type.
 
 Test Coins can be found from both Pocket and [sui testnet explorer](https://suiexplorer.com/?network=testnet)
-   ![Test Coin](./images/Test_Coins.png)
-   ![Test Coin in Explorer](./images/Test_Coins_E.png)
+   ![Test Coin](images/Test_Coins.png)
+   ![Test Coin in Explorer](images/Test_Coins_E.png)
 
 
 ### Mint NFT for Pocket Address
@@ -52,18 +52,18 @@ To mint a testing NFT, user can also do it via [sui testnet explorer](https://su
 1. Follow the step 1-2 at [Mint Coins for Pocket Address](README.md#mint-coins-for-pocket-address)
 
 2. Choose module `nft_driver`, and expand the executable function `mint_to_sender`.
-   ![NFT](./images/NFT.png)
+   ![NFT](images/NFT.png)
 
 3. Pass the value to parameters:
    - Arg0: NFT Name
    - Arg1: NFT Description
    - Arg2: NFT URL, suggest to use `https://avatars.githubusercontent.com/u/12784118?v=4`, the picture looks like:
-   ![leeduckgo](./images/leeduckgo.jpeg)
+   ![leeduckgo](images/leeduckgo.jpeg)
 
 4. Click on `Execute` and `Approve` the signature.
 
 5. The NFT ID will be displayed below the button `Execute`
-   ![NFT_ID](./images/NFT_ID.png)
+   ![NFT_ID](images/NFT_ID.png)
 
 ### Create Kiosk
 
@@ -72,9 +72,9 @@ Call function `initialize_account` to create the `Kiosk`, which is collection of
 1. Follow the step 1-2 at [Mint Coins for Pocket Address](README.md#mint-coins-for-pocket-address)
 2. Choose module `brickin`, and expand the executable function `generate_kiosk`.
 3. Click on `Execute` and `Approve` the signature, no parameter required.
-   ![kiosk](./images/kiosk.png)
+   ![kiosk](images/kiosk.png)
 4. There would be three new objects created, user can find the kiosk information from the latest transaction in his/her pocket, the type must be `kisok`.
-   ![kiosk object](./images/kiosk_object.png)
+   ![kiosk object](images/kiosk_object.png)
 
 ### Increase the balance
 
@@ -82,7 +82,7 @@ Call function `initialize_account` to create the `Kiosk`, which is collection of
 
 This testing case must be done after creating the trading pool from [Brickin Application](https://brickin-nft.vercel.app/).<br/>
 The Coin ID could be found in [sui testnet explorer](https://suiexplorer.com/?network=testnet)
-![Coin Object](./images/coin_object_id.png)
+![Coin Object](images/coin_object_id.png)
 
 1. Mint `CNYA`, `CNYU`, `CNYW` for a certain amount, for example 2500000000000.
 2. Follow the step 1-2 at [Mint Coins for Pocket Address](README.md#mint-coins-for-pocket-address)
@@ -95,14 +95,14 @@ The Coin ID could be found in [sui testnet explorer](https://suiexplorer.com/?ne
    - Arg1: One of IDs for Coin `CNYA`
    - Arg2: One of IDs for Coin `CNYU`
    - Arg3: One of IDs for Coin `CNYW`
-   ![Increate Balance](./images/increase_balance.png)
+   ![Increate Balance](images/increase_balance.png)
 
 After executing the function, the balances in trading pool for the three coins will be increased.
-![Trading Pool Balance](./images/trading_pool_balance.png)
+![Trading Pool Balance](images/trading_pool_balance.png)
 
-## Mapping: Deapp and sui contracts
+## Mapping: Application and sui contracts
 
-Deapp URL: [Brickin Application](https://brickin-nft.vercel.app/).<br/>
+Application URL: [Brickin Application](https://brickin-nft.vercel.app/).<br/>
 
 ### Create the Pool
 
@@ -113,15 +113,14 @@ Call function `create_pair_nft_trade_pool` to generate the Trading Pool, 4 type-
 Exact value of `CNYA`, `CNYU` and `NFTTYPE` could be found at [Define the variables](README.md#define-the-variables).
 
 ```rust
-public entry fun create_pair_nft_trade_pool<X, Y, Z, T, NFT: key + store>(
+public entry fun create_pair_nft_trade_pool<X, Y, Z, NFT: key + store>(
         collection: &mut Kiosk,
         curve_type: vector<u8>,
         delta: u64,
         fee: u64,
         init_price: u64,
         nft: NFT,
-        ctx: &mut TxContext,
-    ) :ID
+        ctx: &mut TxContext)
 ```
 
 1. Click on `NFT Trade Pool`
