@@ -27,7 +27,7 @@ module brickin::cnyw {
         transfer::public_share_object(treasury);
     }
 
-    public fun mint_coin(cap: &mut TreasuryCap<CNYW>, amount: u64, ctx: &mut TxContext): ID {
+    public entry fun mint_coin(cap: &mut TreasuryCap<CNYW>, amount: u64, ctx: &mut TxContext): ID {
         let coin =  mint(cap, amount, ctx);
         let coin_id = object::id(&coin);
         public_transfer(coin, sender(ctx));
